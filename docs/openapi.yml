@@ -1,119 +1,308 @@
 openapi: 3.0.0
 info:
-  version: 0.0.0
-  title: RESTful API
-  description: >-
-    バックエンドAPI
+    version: 0.0.0
+    title: CMS API
+    description: >-
+        CMS（管理インターフェース）で利用するAPI
 servers:
-  - url: 'http://{host}:8081/api/v1'
-    description: go service api server endpoint application
-    variables:
-      host:
-        default: localhost
-        enum:
-          - localhost
+    - url: 'http://{host}:8081/api/v1'
+      description: go service api server endpoint application
+      variables:
+          host:
+              default: localhost
+              enum:
+                  - localhost
+
 paths:
-  /register:
-    post:
-      tags:
-        - user
-      summary: ユーザ登録
-      description: |
-        クライアントが入力する情報をもとにユーザ情報を登録する
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: 山田太郎
-                email:
-                  type: string
-                  format: email
-                  example: yamada@hoge.hoge
-                password:
-                  type: string
-                  format: password
-                  example: qwerty123456789
-              required:
-                - name
-                - email
-                - password
-      responses:
-        '200':
-          description: ユーザ情報登録成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  statusCode:
-                    type: integer
-                    format: number
-                    example: 200
-                  method:
-                    type: string
-                    example: "POST"
-                  message:
-                    type: string
-                    example: "ユーザ登録に成功しました。"
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                        example: 1
-                required:
-                  - statusCode
-                  - method
-                  - message
-                  - data
-        '409':
-          description: |
-            登録済みのメールアドレス
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  statusCode:
-                    type: integer
-                    format: number
-                    example: 409
-                  method:
-                    type: string
-                    example: "POST"
-                  message:
-                    type: string
-                    example: "登録済みのメールアドレスです。"
-                  data: 
-                    type: object
-                    example: null
-        '500':
-          $ref: '#/components/responses/500Error'
-components:
-  responses:
-    500Error:
-      description: |
-        サーバー上のエラー
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              statusCode:
-                type: integer
-                format: int64
-                example: "500"
-              method:
-                type: string
-                example: "POST"
-              message: 
-                type: string
-                example: "サーバー側で何らかのエラーが発生しました。"
-              data:
-                type: object
-                example: null
+    /content-types:
+        get:
+            summary: すべてのコンテンツタイプを取得する
+            tags:
+                - content-type
+            responses:
+                '200':
+                    description: 取得に成功しました
+                    content:
+                        application/json:
+                            example:
+                                - id: 1
+                                  name: 'blogpost'
+                                  fields:
+                                      - id: 1
+                                        name: 'title'
+                                        type: 'text'
+                                      - id: 2
+                                        name: 'content'
+                                        type: 'rich-text'
+                                - id: 2
+                                  name: 'category'
+                                  fields:
+                                      - id: 3
+                                        name: 'categoryName'
+                                        type: 'text'
+
+                '500':
+                    description: 取得に失敗しました
+        post:
+            summary: コンテンツタイプを新しく追加する
+            tags:
+                - content-type
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    example: 'blog'
+                                fields:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            name:
+                                                type: string
+                                                example: 'title'
+                                            type:
+                                                type: string
+                                                example: 'string'
+                            required:
+                                - name
+                                - fields
+            responses:
+                '201':
+                    description: コンテンツタイプが正常に作成されました
+                '500':
+                    description: コンテンツタイプの追加に失敗しました
+    /content-types/{contentTypeId}:
+        get:
+            summary: 特定のコンテンツタイプを取得する
+            tags:
+                - content-type
+            parameters:
+                - name: contentTypeId
+                  in: path
+                  required: true
+                  description: コンテンツタイプのObjectId
+                  schema:
+                      type: string
+                      example: '5f9d9fe8b7c74851a870175d'
+            responses:
+                '200':
+                    description: コンテンツタイプの取得に成功しました
+                    content:
+                        application/json:
+                            example:
+                                id: 1
+                                name: 'blogpost'
+                                fields:
+                                    - id: 1
+                                      name: 'title'
+                                      type: 'text'
+                                    - id: 2
+                                      name: 'content'
+                                      type: 'rich-text'
+                '500':
+                    description: 取得に失敗しました
+        put:
+            summary: 特定のコンテンツタイプを更新する
+            tags:
+                - content-type
+            parameters:
+                - name: contentTypeId
+                  in: path
+                  required: true
+                  description: 更新するコンテンツタイプのObjectId
+                  schema:
+                      type: string
+                      example: '5f9d9fe8b7c74851a870175d'
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    example: 'blog'
+                                fields:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            name:
+                                                type: string
+                                                example: 'title'
+                                            type:
+                                                type: string
+                                                example: 'string'
+                            required:
+                                - name
+                                - fields
+            responses:
+                '200':
+                    description: コンテンツタイプが正常に更新されました
+                '500':
+                    description: コンテンツタイプの更新に失敗しました
+        delete:
+            summary: 特定のコンテンツタイプを削除する
+            tags:
+                - content-type
+            parameters:
+                - name: contentTypeId
+                  in: path
+                  required: true
+                  description: 削除するコンテンツタイプのObjectId
+                  schema:
+                      type: string
+                      example: '5f9d9fe8b7c74851a870175d'
+            responses:
+                '204':
+                    description: コンテンツタイプが正常に削除されました
+                '500':
+                    description: コンテンツタイプの削除に失敗しました
+    /content/{contentType}:
+        get:
+            summary: 指定したコンテンツタイプのコンテンツをすべて取得する
+            tags:
+                - content
+            parameters:
+                - name: contentType
+                  in: path
+                  required: true
+                  description: コンテンツタイプ(eg., blog, category)
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: コンテンツの取得に成功しました
+                    content:
+                        application/json:
+                            example:
+                                - id: 1
+                                  title: 'Sample Blog Post'
+                                  content: 'This is the content of the blog post.'
+                                  author: 'John Doe'
+                                  contentType: 'blog'
+                                - id: 2
+                                  title: 'Another Blog Post'
+                                  content: 'Content of another blog post.'
+                                  author: 'Jane Smith'
+                                  contentType: 'blog'
+                '500':
+                    description: コンテンツの取得に失敗しました
+        post:
+            summary: 指定したコンテンツタイプのコンテンツ新しく追加する
+            tags:
+                - content
+            parameters:
+                - name: contentType
+                  in: path
+                  required: true
+                  description: コンテンツタイプ(eg., blog, category)
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        example:
+                            title: 'title 2'
+                            content: 'XXXXXXXXXX'
+                            author: 'saku'
+            responses:
+                '201':
+                    description: コンテンツの追加に成功しました
+                '500':
+                    description: コンテンツの追加に失敗しました
+    /content/{contentType}/{contentId}:
+        get:
+            summary: 特定のコンテンツを取得する
+            tags:
+                - content
+            parameters:
+                - name: contentType
+                  in: path
+                  required: true
+                  description: コンテンツタイプ(eg., blog, category)
+                  schema:
+                      type: string
+                - name: contentId
+                  in: path
+                  required: true
+                  description: 更新するコンテンツのID
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: コンテンツの取得に成功しました
+                    content:
+                        application/json:
+                            example:
+                                id: 1
+                                title: 'Sample Blog Post'
+                                content: 'This is the content of the blog post.'
+                                author: 'John Doe'
+                                contentType: 'blog'
+                '500':
+                    description: コンテンツの取得に失敗しました
+
+        put:
+            summary: 特定のコンテンツを更新する
+            tags:
+                - content
+            parameters:
+                - name: contentType
+                  in: path
+                  required: true
+                  description: コンテンツタイプ(eg., blog, category)
+                  schema:
+                      type: string
+                - name: contentId
+                  in: path
+                  required: true
+                  description: 更新するコンテンツのID
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        example:
+                            title: 'Updated Content'
+                            content: 'Updated content of the item.'
+                            author: 'Bob Anderson'
+            responses:
+                '200':
+                    description: コンテンツの更新に成功しました
+                    content:
+                        application/json:
+                            example:
+                                id: 4
+                                title: 'Updated Content'
+                                content: 'Updated content of the item.'
+                                author: 'Bob Anderson'
+                                contentType: 'blogpost'
+                '500':
+                    description: コンテンツの更新に失敗しました
+        delete:
+            summary: 特定のコンテンツを削除する
+            tags:
+                - content
+            parameters:
+                - name: contentType
+                  in: path
+                  required: true
+                  description: コンテンツタイプ(eg., blog, category)
+                  schema:
+                      type: string
+                - name: contentId
+                  in: path
+                  required: true
+                  description: 更新するコンテンツのID
+                  schema:
+                      type: string
+            responses:
+                '204':
+                    description: コンテンツの削除に成功しました
+                '500':
+                    description: コンテンツの削除に失敗しました
